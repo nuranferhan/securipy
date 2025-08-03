@@ -1,0 +1,13 @@
+{
+    "21": ["220 FTP Server ready", "220 ProFTPD", "220 vsftpd"],
+    "22": ["SSH-2.0-OpenSSH", "SSH-1.99-Cisco", "SSH-2.0-libssh"],
+    "23": ["Login:", "Telnet Server Ready"],
+    "25": ["220 SMTP Server ready", "220 Postfix", "220 Sendmail"],
+    "53": ["DNS Server"],
+    "80": ["Server: Apache", "Server: nginx", "Server: IIS"],
+    "110": ["POP3 Server ready", "+OK POP3"],
+    "143": ["* OK IMAP4", "IMAP4 Server ready"],
+    "443": ["Server: Apache", "Server: nginx", "Server: IIS"],
+    "993": ["* OK IMAPS ready"],
+    "995": ["+OK POP3S ready"]
+}

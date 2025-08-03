@@ -1,0 +1,177 @@
+# modules/__init__.py
+"""
+SecuriPy Modules Package
+Kapsamlı Güvenlik Aracı Seti Modülleri
+
+Bu paket SecuriPy güvenlik aracı setinin ana modüllerini içerir:
+- Port Scanner: TCP/UDP port taraması
+- Vulnerability Scanner: Güvenlik açığı tespiti
+- Network Analyzer: Ağ keşfi ve analizi
+- Utils: Yardımcı fonksiyonlar
+- CLI: Komut satırı arayüzü
+"""
+
+__version__ = "1.0.0"
+__author__ = "SecuriPy Development Team"
+__email__ = "developer@securipy.com"
+__license__ = "MIT"
+__description__ = "Kapsamlı Python Güvenlik Aracı Seti"
+
+# Ana modülleri import et
+try:
+    from .port_scanner import PortScanner
+    from .vulnerability_scanner import VulnerabilityScanner, VulnerabilityLevel, Vulnerability
+    from .network_analyzer import NetworkAnalyzer, NetworkDevice, NetworkSegment
+    from .utils import (
+        IPUtils, PortUtils, NetworkUtils, StringUtils, 
+        CryptoUtils, FileUtils, TimeUtils, ValidationUtils,
+        LoggingUtils, ConfigUtils
+    )
+    from .cli import SecuriPyCLI
+    
+    # Başarılı import
+    _import_success = True
+    
+except ImportError as e:
+    print(f"⚠️ Modül import uyarısı: {e}")
+    _import_success = False
+
+# Export edilen sınıflar ve fonksiyonlar
+__all__ = [
+    # Ana sınıflar
+    'PortScanner',
+    'VulnerabilityScanner', 
+    'NetworkAnalyzer',
+    'SecuriPyCLI',
+    
+    # Veri sınıfları
+    'Vulnerability',
+    'VulnerabilityLevel', 
+    'NetworkDevice',
+    'NetworkSegment',
+    
+    # Utility sınıfları
+    'IPUtils',
+    'PortUtils', 
+    'NetworkUtils',
+    'StringUtils',
+    'CryptoUtils',
+    'FileUtils',
+    'TimeUtils',
+    'ValidationUtils',
+    'LoggingUtils',
+    'ConfigUtils',
+    
+    # Versiyon bilgileri
+    '__version__',
+    '__author__',
+    '__license__'
+]
+
+# Modül bilgileri
+def get_version():
+    """Modül versiyonunu döndürür"""
+    return __version__
+
+def get_info():
+    """Modül bilgilerini döndürür"""
+    return {
+        'name': 'SecuriPy',
+        'version': __version__,
+        'description': __description__,
+        'author': __author__,
+        'email': __email__,
+        'license': __license__,
+        'import_success': _import_success
+    }
+
+def check_dependencies():
+    """Bağımlılık kontrolü yapar"""
+    required_modules = [
+        'requests', 'matplotlib', 'json', 'socket', 
+        'threading', 'subprocess', 'ipaddress'
+    ]
+    
+    missing_modules = []
+    for module in required_modules:
+        try:
+            __import__(module)
+        except ImportError:
+            missing_modules.append(module)
+    
+    return {
+        'all_available': len(missing_modules) == 0,
+        'missing': missing_modules,
+        'available': [m for m in required_modules if m not in missing_modules]
+    }
+
+def create_default_scanner():
+    """Varsayılan ayarlarla scanner oluşturur"""
+    if not _import_success:
+        raise ImportError("Modüller düzgün yüklenmedi")
+    
+    return {
+        'port_scanner': PortScanner(),
+        'vuln_scanner': VulnerabilityScanner(), 
+        'network_analyzer': NetworkAnalyzer()
+    }
+
+# Modül yüklendiğinde çalıştırılacak kod
+def _initialize_module():
+    """Modül başlatma işlemleri"""
+    import os
+    
+    # Gerekli dizinleri oluştur
+    directories = ['reports', 'logs', 'data', 'config']
+    for directory in directories:
+        os.makedirs(directory, exist_ok=True)
+    
+    # Bağımlılık kontrolü
+    deps = check_dependencies()
+    if not deps['all_available']:
+        print(f"⚠️ Eksik bağımlılıklar: {', '.join(deps['missing'])}")
+        print("📦 Kurulum için: pip install -r requirements.txt")
+
+# Modül başlatma
+_initialize_module()
+
+# Versiyon kontrolü
+def check_python_version():
+    """Python versiyon kontrolü"""
+    import sys
+    
+    required_version = (3, 8)
+    current_version = sys.version_info[:2]
+    
+    if current_version < required_version:
+        raise RuntimeError(
+            f"SecuriPy Python {required_version[0]}.{required_version[1]} "
+            f"veya üzeri gerektirir. Mevcut: {current_version[0]}.{current_version[1]}"
+        )
+    
+    return True
+
+# Python versiyon kontrolü yap
+try:
+    check_python_version()
+except RuntimeError as e:
+    print(f"❌ {e}")
+
+# Debug bilgileri (opsiyonel)
+def print_debug_info():
+    """Debug bilgilerini yazdırır"""
+    info = get_info()
+    deps = check_dependencies()
+    
+    print(f"📦 {info['name']} v{info['version']}")
+    print(f"📧 {info['author']} <{info['email']}>")
+    print(f"📄 Lisans: {info['license']}")
+    print(f"✅ Import Başarılı: {info['import_success']}")
+    print(f"🔗 Tüm Bağımlılıklar: {deps['all_available']}")
+    
+    if not deps['all_available']:
+        print(f"❌ Eksik: {', '.join(deps['missing'])}")
+
+# Modül hakkında
+if __name__ == "__main__":
+    print_debug_info()
