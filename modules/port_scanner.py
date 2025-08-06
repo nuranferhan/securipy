@@ -1,4 +1,3 @@
-# modules/port_scanner.py
 import socket
 import threading
 import time

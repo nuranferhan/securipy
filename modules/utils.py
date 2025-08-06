@@ -1,4 +1,3 @@
-# modules/utils.py
 """
 SecuriPy Yardımcı Fonksiyonlar Modülü
 Ortak kullanılan yardımcı fonksiyonlar ve utilities

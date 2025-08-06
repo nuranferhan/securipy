@@ -1,4 +1,3 @@
-# tests/test_port_scanner.py
 """
 SecuriPy Port Scanner Unit Tests
 """

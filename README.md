@@ -3,7 +3,7 @@
 ### Overview
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/a2ef6518-5fed-494c-accf-031c6395d9aa" width="540" alt="Security Toolkit"/>
+  <img src="https://github.com/user-attachments/assets/b3c0ea22-988b-4fb0-8adc-1001d0971012" width="540" alt="Security Toolkit"/>
 </p>
 
 SecuriPy is a comprehensive Python security toolkit developed for network security professionals and cybersecurity experts. This project consolidates critical security operations such as port scanning, vulnerability detection, and network analysis into a single platform.

@@ -1,7 +1,5 @@
-# modules/cli.py
 """
 SecuriPy Command Line Interface (CLI)
-Komut satırı arayüzü modülü
 """
 
 import argparse

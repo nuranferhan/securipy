@@ -1,9 +1,4 @@
-# modules/__init__.py
-"""
-SecuriPy Modules Package
-Kapsamlı Güvenlik Aracı Seti Modülleri
-
-Bu paket SecuriPy güvenlik aracı setinin ana modüllerini içerir:
+"""Bu paket SecuriPy güvenlik aracı setinin ana modüllerini içerir:
 - Port Scanner: TCP/UDP port taraması
 - Vulnerability Scanner: Güvenlik açığı tespiti
 - Network Analyzer: Ağ keşfi ve analizi
@@ -17,7 +12,6 @@ __email__ = "developer@securipy.com"
 __license__ = "MIT"
 __description__ = "Kapsamlı Python Güvenlik Aracı Seti"
 
-# Ana modülleri import et
 try:
     from .port_scanner import PortScanner
     from .vulnerability_scanner import VulnerabilityScanner, VulnerabilityLevel, Vulnerability
@@ -29,28 +23,23 @@ try:
     )
     from .cli import SecuriPyCLI
     
-    # Başarılı import
     _import_success = True
     
 except ImportError as e:
     print(f"⚠️ Modül import uyarısı: {e}")
     _import_success = False
 
-# Export edilen sınıflar ve fonksiyonlar
 __all__ = [
-    # Ana sınıflar
     'PortScanner',
     'VulnerabilityScanner', 
     'NetworkAnalyzer',
     'SecuriPyCLI',
     
-    # Veri sınıfları
     'Vulnerability',
     'VulnerabilityLevel', 
     'NetworkDevice',
     'NetworkSegment',
     
-    # Utility sınıfları
     'IPUtils',
     'PortUtils', 
     'NetworkUtils',
@@ -62,13 +51,11 @@ __all__ = [
     'LoggingUtils',
     'ConfigUtils',
     
-    # Versiyon bilgileri
     '__version__',
     '__author__',
     '__license__'
 ]
 
-# Modül bilgileri
 def get_version():
     """Modül versiyonunu döndürür"""
     return __version__

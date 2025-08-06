@@ -1,4 +1,4 @@
-# main.py - SecuriPy Ana GUI Dosyası 
+# SecuriPy Ana GUI Dosyası 
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog, scrolledtext
 import threading
@@ -157,7 +157,7 @@ class SecuriPyGUI:
     def create_port_scanner_tab(self, notebook):
         """Port Scanner tab'ını oluşturur"""
         port_frame = ttk.Frame(notebook)
-        notebook.add(port_frame, text="🔍 Port Scanner")
+        notebook.add(port_frame, text="Port Tarama")
         
         # Hedef IP girişi
         ttk.Label(port_frame, text="Hedef IP/Domain:", font=('Arial', 10, 'bold')).pack(anchor='w', pady=(10, 5))
@@ -237,7 +237,7 @@ class SecuriPyGUI:
     def create_vulnerability_scanner_tab(self, notebook):
         """Vulnerability Scanner tab'ını oluşturur"""
         vuln_frame = ttk.Frame(notebook)
-        notebook.add(vuln_frame, text="🔒 Vuln Scanner")
+        notebook.add(vuln_frame, text="Zafiyet Tarama")
         
         # Hedef bilgileri
         ttk.Label(vuln_frame, text="Hedef Sistem:", font=('Arial', 10, 'bold')).pack(anchor='w', pady=(10, 5))
@@ -288,7 +288,7 @@ class SecuriPyGUI:
     def create_network_analyzer_tab(self, notebook):
         """Network Analyzer tab'ını oluşturur"""
         network_frame = ttk.Frame(notebook)
-        notebook.add(network_frame, text="🌐 Network Analyzer")
+        notebook.add(network_frame, text="Ağ Analizi")
         
         # Ağ aralığı
         ttk.Label(network_frame, text="Ağ Aralığı (CIDR):", font=('Arial', 10, 'bold')).pack(anchor='w', pady=(10, 5))

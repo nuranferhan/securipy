@@ -1,4 +1,3 @@
-# modules/network_analyzer.py
 import socket
 import struct
 import threading
