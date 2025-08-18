@@ -9,19 +9,10 @@ import subprocess
 import re
 
 class PortScanner:
-    """
-    Kapsamlı Port Tarayıcı Sınıfı
-    TCP ve UDP portlarını taramak, servis tespiti yapmak ve banner bilgilerini toplamak için kullanılır.
-    """
+   
     
     def __init__(self, timeout: float = 1.0, max_threads: int = 100):
-        """
-        Port Scanner'ı başlatır
-        
-        Args:
-            timeout: Bağlantı zaman aşımı (saniye)
-            max_threads: Maksimum thread sayısı
-        """
+   
         self.timeout = timeout
         self.max_threads = max_threads
         self.open_ports = []
@@ -31,22 +22,18 @@ class PortScanner:
         self.banners = {}
         self.scan_results = {}
         
-        # Yaygın portlar ve servisleri yükle
         self.load_common_ports()
         self.load_service_banners()
     
     def load_common_ports(self):
-        """Yaygın portlar listesini yükler"""
         try:
             with open('data/common_ports.json', 'r', encoding='utf-8') as f:
                 content = f.read().strip()
                 if not content:
-                    # Dosya boş ise varsayılan değerleri kullan
                     self.common_ports = self.get_default_common_ports()
                     print("Uyarı: common_ports.json dosyası boş, varsayılan portlar kullanılıyor.")
                     return
                 
-                # Dosyayı başa al ve JSON'u parse et
                 f.seek(0)
                 self.common_ports = json.load(f)
                 
@@ -58,17 +45,14 @@ class PortScanner:
             self.common_ports = self.get_default_common_ports()
     
     def load_service_banners(self):
-        """Servis banner'larını yükler"""
         try:
             with open('data/banners.json', 'r', encoding='utf-8') as f:
                 content = f.read().strip()
                 if not content:
-                    # Dosya boş ise varsayılan değerleri kullan
                     self.service_banners = self.get_default_banners()
                     print("Uyarı: banners.json dosyası boş, varsayılan banner'lar kullanılıyor.")
                     return
                 
-                # Dosyayı başa al ve JSON'u parse et
                 f.seek(0)
                 self.service_banners = json.load(f)
                 
@@ -80,7 +64,6 @@ class PortScanner:
             self.service_banners = self.get_default_banners()
     
     def get_default_common_ports(self):
-        """Varsayılan yaygın portlar listesi"""
         return {
             "21": "FTP",
             "22": "SSH", 
@@ -104,7 +87,6 @@ class PortScanner:
         }
     
     def get_default_banners(self):
-        """Varsayılan servis banner'ları"""
         return {
             "21": ["220 FTP Server ready", "220 ProFTPD", "220 vsftpd"],
             "22": ["SSH-2.0-OpenSSH", "SSH-1.99-Cisco", "SSH-2.0-libssh"],
@@ -120,17 +102,7 @@ class PortScanner:
         }
     
     def scan_port(self, host: str, port: int, protocol: str = 'tcp') -> Dict:
-        """
-        Tek bir portu tarar
-        
-        Args:
-            host: Hedef IP adresi veya hostname
-            port: Taranacak port numarası
-            protocol: Protokol türü ('tcp' veya 'udp')
-            
-        Returns:
-            Dict: Tarama sonucu bilgileri
-        """
+ 
         result = {
             'port': port,
             'protocol': protocol,
@@ -152,19 +124,17 @@ class PortScanner:
         return result
     
     def _scan_tcp_port(self, host: str, port: int, result: Dict) -> Dict:
-        """TCP port taraması yapar"""
+      
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(self.timeout)
         
         try:
-            # Port bağlantısını dene
             connection_result = sock.connect_ex((host, port))
             
             if connection_result == 0:
                 result['state'] = 'open'
                 result['service'] = self.common_ports.get(str(port), 'unknown')
                 
-                # Banner grabbing dene
                 banner = self._grab_banner(sock, port)
                 if banner:
                     result['banner'] = banner
@@ -181,12 +151,10 @@ class PortScanner:
         return result
     
     def _scan_udp_port(self, host: str, port: int, result: Dict) -> Dict:
-        """UDP port taraması yapar"""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(self.timeout)
         
         try:
-            # UDP için test mesajı gönder
             test_message = b"SecuriPy UDP Scan"
             sock.sendto(test_message, (host, port))
             
@@ -197,7 +165,6 @@ class PortScanner:
                 if data:
                     result['banner'] = data.decode('utf-8', errors='ignore')[:100]
             except socket.timeout:
-                # UDP için timeout genellikle port'un kapalı olduğunu gösterir
                 result['state'] = 'open|filtered'
                 
         except Exception as e:
@@ -209,26 +176,22 @@ class PortScanner:
         return result
     
     def _grab_banner(self, sock: socket.socket, port: int) -> str:
-        """Servis banner'ını yakalar"""
         try:
-            # Port'a özel banner grabbing stratejileri
-            if port == 80:  # HTTP
+            if port == 80: 
                 sock.send(b"GET / HTTP/1.1\r\nHost: target\r\n\r\n")
-            elif port == 443:  # HTTPS
-                return ""  # SSL handshake gerekli
-            elif port == 21:  # FTP
-                pass  # FTP genellikle otomatik banner gönderir
-            elif port == 22:  # SSH
-                pass  # SSH otomatik banner gönderir
-            elif port == 25:  # SMTP
-                pass  # SMTP otomatik banner gönderir
+            elif port == 443: 
+                return ""  
+            elif port == 21:  
+                pass  
+            elif port == 22:  
+                pass  
+            elif port == 25: 
+                pass  
             else:
-                # Genel probe
                 sock.send(b"\r\n")
             
-            # Banner'ı oku
             banner = sock.recv(1024).decode('utf-8', errors='ignore')
-            return banner.strip()[:200]  # İlk 200 karakter
+            return banner.strip()[:200]  
             
         except:
             return ""
@@ -236,11 +199,11 @@ class PortScanner:
     def _extract_version(self, banner: str, port: int) -> str:
         """Banner'dan versiyon bilgisini çıkarır"""
         version_patterns = [
-            r'(\d+\.\d+(?:\.\d+)?)',  # Genel versiyon pattern'i
-            r'Apache/(\d+\.\d+\.\d+)',  # Apache
-            r'nginx/(\d+\.\d+\.\d+)',   # Nginx
-            r'OpenSSH_(\d+\.\d+)',      # SSH
-            r'Microsoft-IIS/(\d+\.\d+)', # IIS
+            r'(\d+\.\d+(?:\.\d+)?)', 
+            r'Apache/(\d+\.\d+\.\d+)',  
+            r'nginx/(\d+\.\d+\.\d+)',   
+            r'OpenSSH_(\d+\.\d+)',     
+            r'Microsoft-IIS/(\d+\.\d+)',
         ]
         
         for pattern in version_patterns:
@@ -252,19 +215,7 @@ class PortScanner:
     
     def scan_range(self, host: str, start_port: int, end_port: int, 
                    protocol: str = 'tcp', callback=None) -> Dict:
-        """
-        Port aralığını tarar
-        
-        Args:
-            host: Hedef IP adresi
-            start_port: Başlangıç portu
-            end_port: Bitiş portu
-            protocol: Protokol türü
-            callback: İlerleme callback fonksiyonu
-            
-        Returns:
-            Dict: Tarama sonuçları
-        """
+ 
         results = {
             'host': host,
             'protocol': protocol,
@@ -277,15 +228,13 @@ class PortScanner:
         ports_to_scan = list(range(start_port, end_port + 1))
         completed_ports = 0
         
-        # Thread pool ile paralel tarama
         with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
-            # Tüm portları submit et
+            
             future_to_port = {
                 executor.submit(self.scan_port, host, port, protocol): port 
                 for port in ports_to_scan
             }
             
-            # Sonuçları topla
             for future in as_completed(future_to_port):
                 port = future_to_port[future]
                 try:
@@ -297,7 +246,6 @@ class PortScanner:
                     
                     completed_ports += 1
                     
-                    # Callback ile ilerleme bildir
                     if callback:
                         progress = (completed_ports / len(ports_to_scan)) * 100
                         callback(progress, port, result)
@@ -309,7 +257,6 @@ class PortScanner:
                         'error': str(e)
                     }
         
-        # İstatistikleri hesapla
         results['end_time'] = time.time()
         results['duration'] = results['end_time'] - results['start_time']
         results['statistics'] = self._calculate_statistics(results)
@@ -317,17 +264,17 @@ class PortScanner:
         return results
     
     def scan_common_ports(self, host: str, protocol: str = 'tcp', callback=None) -> Dict:
-        """Yaygın portları tarar"""
+  
         common_port_numbers = [int(port) for port in self.common_ports.keys()]
         return self.scan_range(host, min(common_port_numbers), 
                              max(common_port_numbers), protocol, callback)
     
     def aggressive_scan(self, host: str, callback=None) -> Dict:
-        """Agresif tarama - tüm portları tarar (1-65535)"""
+  
         return self.scan_range(host, 1, 65535, 'tcp', callback)
     
     def _calculate_statistics(self, results: Dict) -> Dict:
-        """Tarama istatistiklerini hesaplar"""
+    
         total_ports = len(results['ports'])
         open_ports = len(results['open_ports'])
         closed_ports = sum(1 for p in results['ports'].values() 
@@ -345,7 +292,7 @@ class PortScanner:
         }
     
     def export_results(self, results: Dict, filename: str, format: str = 'json'):
-        """Tarama sonuçlarını dosyaya aktarır"""
+     
         os.makedirs('reports', exist_ok=True)
         filepath = os.path.join('reports', filename)
         
@@ -369,7 +316,6 @@ class PortScanner:
                     f.write("\n")
     
     def get_host_info(self, host: str) -> Dict:
-        """Hedef host hakkında temel bilgileri toplar"""
         info = {
             'host': host,
             'ip_address': '',
@@ -378,16 +324,13 @@ class PortScanner:
         }
         
         try:
-            # IP adresini çözümle
             info['ip_address'] = socket.gethostbyname(host)
             
-            # Hostname'i çözümle
             try:
                 info['hostname'] = socket.gethostbyaddr(info['ip_address'])[0]
             except:
                 info['hostname'] = host
             
-            # Ping testi (Windows için)
             ping_result = subprocess.run(
                 ['ping', '-n', '1', '-w', '1000', info['ip_address']], 
                 capture_output=True, text=True
@@ -400,14 +343,12 @@ class PortScanner:
         return info
 
 
-# Test fonksiyonu
 if __name__ == "__main__":
     def progress_callback(progress, port, result):
         print(f"İlerleme: %{progress:.1f} - Port {port}: {result['state']}")
     
     scanner = PortScanner(timeout=0.5, max_threads=50)
     
-    # Test taraması
     print("Port Scanner Test Başlatılıyor...")
     results = scanner.scan_range('127.0.0.1', 20, 100, callback=progress_callback)
     
@@ -415,5 +356,4 @@ if __name__ == "__main__":
     print(f"Açık Portlar: {results['open_ports']}")
     print(f"Tarama Süresi: {results['duration']:.2f} saniye")
     
-    # Sonuçları kaydet
     scanner.export_results(results, 'test_scan', 'json')

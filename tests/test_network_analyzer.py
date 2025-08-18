@@ -1,7 +1,3 @@
-"""
-SecuriPy Network Analyzer Unit Tests
-"""
-
 import unittest
 import sys
 import os
@@ -14,16 +10,13 @@ import platform
 from unittest.mock import Mock, patch, MagicMock, mock_open
 from dataclasses import asdict
 
-# Modül yolunu ekle
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from modules.network_analyzer import NetworkAnalyzer, NetworkDevice, NetworkSegment
 
 class TestNetworkDevice(unittest.TestCase):
-    """NetworkDevice dataclass test sınıfı"""
     
     def test_network_device_creation(self):
-        """NetworkDevice oluşturma testi"""
         device = NetworkDevice(
             ip_address="192.168.1.100",
             hostname="test-host",
@@ -41,7 +34,6 @@ class TestNetworkDevice(unittest.TestCase):
         self.assertIsInstance(device.services, dict)
     
     def test_network_device_defaults(self):
-        """NetworkDevice varsayılan değerler testi"""
         device = NetworkDevice(ip_address="192.168.1.1")
         
         self.assertEqual(device.hostname, "")
@@ -54,7 +46,6 @@ class TestNetworkDevice(unittest.TestCase):
         self.assertEqual(device.services, {})
     
     def test_network_device_to_dict(self):
-        """NetworkDevice dict dönüşümü testi"""
         device = NetworkDevice(
             ip_address="192.168.1.50",
             hostname="web-server",
@@ -69,10 +60,8 @@ class TestNetworkDevice(unittest.TestCase):
 
 
 class TestNetworkSegment(unittest.TestCase):
-    """NetworkSegment dataclass test sınıfı"""
     
     def test_network_segment_creation(self):
-        """NetworkSegment oluşturma testi"""
         segment = NetworkSegment(
             network="192.168.1.0/24",
             netmask="255.255.255.0",
@@ -87,16 +76,12 @@ class TestNetworkSegment(unittest.TestCase):
 
 
 class TestNetworkAnalyzer(unittest.TestCase):
-    """Network Analyzer test sınıfı"""
     
     def setUp(self):
-        """Her test öncesi çağrılır"""
         self.analyzer = NetworkAnalyzer(timeout=0.5, max_threads=10)
         self.test_ip = "192.168.1.100"
     
     def tearDown(self):
-        """Her test sonrası çağrılır"""
-        # Test dosyalarını temizle
         test_files = [
             'reports/test_network_scan.json',
             'reports/test_network_scan.html'
@@ -108,7 +93,6 @@ class TestNetworkAnalyzer(unittest.TestCase):
                 pass
     
     def test_analyzer_initialization(self):
-        """Analyzer başlatma testi"""
         self.assertEqual(self.analyzer.timeout, 0.5)
         self.assertEqual(self.analyzer.max_threads, 10)
         self.assertIsInstance(self.analyzer.discovered_devices, list)
@@ -117,31 +101,24 @@ class TestNetworkAnalyzer(unittest.TestCase):
         self.assertIsInstance(self.analyzer.mac_vendors, dict)
     
     def test_load_os_patterns_default(self):
-        """OS patterns yükleme testi (varsayılan)"""
-        # Dosya yokken varsayılan patterns yüklenmeli
         self.analyzer.load_os_patterns()
         
         self.assertIn("windows", self.analyzer.os_patterns)
         self.assertIn("linux", self.analyzer.os_patterns)
         self.assertIn("macos", self.analyzer.os_patterns)
         
-        # Windows pattern kontrolü
         windows_pattern = self.analyzer.os_patterns["windows"]
         self.assertIn("ttl_values", windows_pattern)
         self.assertIn("patterns", windows_pattern)
     
     @patch('builtins.open', mock_open(read_data='{"test_os": {"ttl_values": [64]}}'))
     def test_load_os_patterns_from_file(self):
-        """OS patterns dosyadan yükleme testi"""
         patterns = self.analyzer.load_os_patterns()
         
-        # Mock dosya içeriği yüklenmiş olmalı
         self.assertIn("test_os", patterns)
         self.assertEqual(patterns["test_os"]["ttl_values"], [64])
     
     def test_load_mac_vendors_default(self):
-        """MAC vendors yükleme testi (varsayılan)"""
-        # Dosya yokken varsayılan vendors yüklenmeli
         self.analyzer.load_mac_vendors()
         
         self.assertIn("00:50:56", self.analyzer.mac_vendors)
@@ -149,8 +126,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
     
     @patch('subprocess.run')
     def test_ping_host_success(self, mock_run):
-        """Başarılı ping testi"""
-        # Mock ping başarılı
+     
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = "Reply from 192.168.1.1"
         
@@ -165,8 +141,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
     
     @patch('subprocess.run')
     def test_ping_host_failure(self, mock_run):
-        """Başarısız ping testi"""
-        # Mock ping başarısız
+    
         mock_run.return_value.returncode = 1
         
         device = self.analyzer._ping_host("192.168.1.999")
@@ -175,8 +150,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
     
     @patch('subprocess.run')
     def test_ping_host_timeout(self, mock_run):
-        """Ping timeout testi"""
-        # Mock ping timeout
+     
         mock_run.side_effect = TimeoutError()
         
         device = self.analyzer._ping_host("10.255.255.1")
@@ -186,20 +160,17 @@ class TestNetworkAnalyzer(unittest.TestCase):
     @patch('ipaddress.IPv4Network')
     @patch.object(NetworkAnalyzer, '_ping_host')
     def test_discover_network(self, mock_ping, mock_network):
-        """Ağ keşfi testi"""
-        # Mock network hosts
+      
         mock_network.return_value.hosts.return_value = [
             ipaddress.IPv4Address('192.168.1.1'),
             ipaddress.IPv4Address('192.168.1.2')
         ]
         mock_network.return_value.broadcast_address = ipaddress.IPv4Address('192.168.1.255')
         
-        # Mock ping sonuçları
         device1 = NetworkDevice(ip_address="192.168.1.1", is_alive=True)
         device2 = NetworkDevice(ip_address="192.168.1.2", is_alive=True)
-        mock_ping.side_effect = [device1, device2, None]  # broadcast için None
+        mock_ping.side_effect = [device1, device2, None] 
         
-        # Callback fonksiyonu
         callback_calls = []
         def test_callback(progress, ip, device):
             callback_calls.append((progress, ip, device))
@@ -213,8 +184,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
     
     @patch('subprocess.run')
     def test_get_mac_address_windows(self, mock_run):
-        """Windows MAC adresi öğrenme testi"""
-        # Mock Windows ARP output
+
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = (
             "Interface: 192.168.1.5 --- 0x2\n"
@@ -229,8 +199,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
     
     @patch('subprocess.run')
     def test_get_mac_address_linux(self, mock_run):
-        """Linux MAC adresi öğrenme testi"""
-        # Mock Linux ARP output
+    
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = (
             "Address                  HWtype  HWaddress           Flags Mask            Iface\n"
@@ -243,23 +212,19 @@ class TestNetworkAnalyzer(unittest.TestCase):
         self.assertEqual(mac, "AA:BB:CC:DD:EE:FF")
     
     def test_get_vendor_from_mac(self):
-        """MAC'dan vendor tespiti testi"""
-        # Bilinen vendor
+      
         vendor = self.analyzer._get_vendor_from_mac("00:50:56:12:34:56")
         self.assertEqual(vendor, "VMware")
         
-        # Bilinmeyen vendor
         vendor = self.analyzer._get_vendor_from_mac("FF:FF:FF:FF:FF:FF")
         self.assertEqual(vendor, "Unknown")
         
-        # Boş MAC
         vendor = self.analyzer._get_vendor_from_mac("")
         self.assertEqual(vendor, "")
     
     @patch('subprocess.run')
     def test_get_ttl_windows(self, mock_run):
-        """Windows TTL değeri öğrenme testi"""
-        # Mock Windows ping output
+      
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = (
             "Pinging 192.168.1.1 with 32 bytes of data:\n"
@@ -273,8 +238,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
     
     @patch('subprocess.run')
     def test_get_ttl_linux(self, mock_run):
-        """Linux TTL değeri öğrenme testi"""
-        # Mock Linux ping output
+      
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = (
             "PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.\n"
@@ -287,26 +251,23 @@ class TestNetworkAnalyzer(unittest.TestCase):
         self.assertEqual(ttl, 128)
     
     def test_detect_os_from_ttl(self):
-        """TTL'den OS tespiti testi"""
+       
         with patch.object(self.analyzer, '_get_ttl') as mock_ttl:
-            # Linux TTL
+        
             mock_ttl.return_value = 64
             os_type = self.analyzer._detect_os("192.168.1.1")
             self.assertIn("Linux", os_type)
             
-            # Windows TTL
             mock_ttl.return_value = 128
             os_type = self.analyzer._detect_os("192.168.1.1")
             self.assertIn("Windows", os_type)
             
-            # Cisco TTL
             mock_ttl.return_value = 255
             os_type = self.analyzer._detect_os("192.168.1.1")
             self.assertIn("Cisco", os_type)
     
     def test_detect_os_from_banners(self):
-        """Banner'dan OS tespiti testi"""
-        # Mock socket bağlantısı
+    
         mock_socket = MagicMock()
         mock_socket.connect_ex.return_value = 0
         mock_socket.recv.return_value = b"Server: Apache/2.4.41 (Ubuntu)"
@@ -317,8 +278,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
         self.assertIn("Ubuntu", os_type)
     
     def test_scan_single_port_open(self):
-        """Açık port tarama testi"""
-        # Test server oluştur
+   
         test_server = self._create_test_server()
         
         try:
@@ -331,67 +291,58 @@ class TestNetworkAnalyzer(unittest.TestCase):
             test_server.shutdown()
     
     def test_scan_single_port_closed(self):
-        """Kapalı port tarama testi"""
-        # Büyük ihtimalle kapalı olan port
+     
         is_open = self.analyzer._scan_single_port("127.0.0.1", 65432)
         self.assertFalse(is_open)
     
     def test_quick_port_scan(self):
-        """Hızlı port tarama testi"""
-        # Test server oluştur
+      
         test_server = self._create_test_server()
         test_port = test_server.server_address[1]
         
         try:
-            # Port listesini test portunu içerecek şekilde değiştir
+          
             original_common_ports = {
                 21: "FTP", 22: "SSH", test_port: "TEST"
             }
             
             with patch.dict('modules.network_analyzer.NetworkAnalyzer._quick_port_scan.__defaults__[0]', 
                           original_common_ports, clear=True):
-                # Patch _quick_port_scan metodundaki common_ports dict'ini
+               
                 with patch.object(self.analyzer, '_scan_single_port') as mock_scan:
                     mock_scan.side_effect = lambda ip, port: port == test_port
                     
                     open_ports, services = self.analyzer._quick_port_scan("127.0.0.1")
                     
-                    # Mock'un çağrıldığını kontrol et
                     self.assertTrue(mock_scan.called)
         finally:
             test_server.shutdown()
     
     def test_classify_device_type(self):
-        """Cihaz türü sınıflandırma testi"""
-        # Web sunucusu
+     
         device = NetworkDevice(ip_address="192.168.1.1", open_ports=[80, 443, 22])
         device_type = self.analyzer._classify_device_type(device)
         self.assertIn("Web Server", device_type)
         
-        # Veritabanı sunucusu
         device = NetworkDevice(ip_address="192.168.1.2", open_ports=[3306])
         device_type = self.analyzer._classify_device_type(device)
         self.assertEqual(device_type, "Database Server")
         
-        # DNS sunucusu
         device = NetworkDevice(ip_address="192.168.1.3", open_ports=[53])
         device_type = self.analyzer._classify_device_type(device)
         self.assertEqual(device_type, "DNS Server")
         
-        # Windows Desktop
         device = NetworkDevice(ip_address="192.168.1.4", open_ports=[3389])
         device_type = self.analyzer._classify_device_type(device)
         self.assertEqual(device_type, "Windows Desktop")
         
-        # Bilinmeyen cihaz
         device = NetworkDevice(ip_address="192.168.1.5", open_ports=[9999])
         device_type = self.analyzer._classify_device_type(device)
         self.assertEqual(device_type, "Unknown Device")
     
     @patch('subprocess.run')
     def test_detect_gateways_windows(self, mock_run):
-        """Windows gateway tespiti testi"""
-        # Mock Windows route output
+     
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = (
             "Network Destination        Netmask          Gateway       Interface  Metric\n"
@@ -405,8 +356,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
     
     @patch('subprocess.run')
     def test_detect_gateways_linux(self, mock_run):
-        """Linux gateway tespiti testi"""
-        # Mock Linux route output
+    
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = (
             "Kernel IP routing table\n"
@@ -420,8 +370,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
         self.assertIn("192.168.1.1", gateways)
     
     def test_analyze_network_topology(self):
-        """Ağ topolojisi analizi testi"""
-        # Test cihazları oluştur
+    
         devices = [
             NetworkDevice(ip_address="192.168.1.1", open_ports=[80, 443], 
                          os_fingerprint="Linux", vendor="Intel"),
@@ -436,24 +385,20 @@ class TestNetworkAnalyzer(unittest.TestCase):
         with patch.object(self.analyzer, '_detect_gateways', return_value=['192.168.1.1']):
             topology = self.analyzer.analyze_network_topology()
         
-        # Temel kontroller
         self.assertEqual(topology['total_devices'], 3)
         self.assertIn('device_types', topology)
         self.assertIn('os_distribution', topology)
         self.assertIn('vendor_distribution', topology)
         
-        # OS dağılımı kontrolü
         self.assertEqual(topology['os_distribution']['Linux'], 2)
         self.assertEqual(topology['os_distribution']['Windows'], 1)
         
-        # Vendor dağılımı kontrolü
         self.assertEqual(topology['vendor_distribution']['Intel'], 2)
         self.assertEqual(topology['vendor_distribution']['VMware'], 1)
     
     @patch('subprocess.run')
     def test_get_network_interfaces_windows(self, mock_run):
-        """Windows ağ arayüzleri testi"""
-        # Mock Windows ipconfig output
+     
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = (
             "Ethernet adapter Local Area Connection:\n"
@@ -471,8 +416,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
     
     @patch('subprocess.run')
     def test_get_network_interfaces_linux(self, mock_run):
-        """Linux ağ arayüzleri testi"""
-        # Mock Linux ifconfig output
+     
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = (
             "eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n"
@@ -487,7 +431,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
         self.assertEqual(interface['name'], 'eth0')
     
     def test_detailed_device_analysis(self):
-        """Detaylı cihaz analizi testi"""
+      
         device = NetworkDevice(ip_address="192.168.1.100", is_alive=True)
         
         with patch.object(self.analyzer, '_get_mac_address', return_value="00:11:22:33:44:55"):
@@ -505,15 +449,13 @@ class TestNetworkAnalyzer(unittest.TestCase):
         self.assertEqual(updated_device.services, {80: "HTTP", 22: "SSH"})
     
     def test_export_network_analysis_json(self):
-        """JSON ağ analizi export testi"""
-        # Test verileri
+      
         test_devices = [
             NetworkDevice(ip_address="192.168.1.1", hostname="router", is_alive=True),
             NetworkDevice(ip_address="192.168.1.100", hostname="server", open_ports=[80, 443])
         ]
         self.analyzer.discovered_devices = test_devices
         
-        # Mock metotları
         with patch.object(self.analyzer, 'analyze_network_topology', 
                          return_value={'total_devices': 2}):
             with patch.object(self.analyzer, 'get_network_interfaces', 
@@ -521,11 +463,9 @@ class TestNetworkAnalyzer(unittest.TestCase):
                 
                 self.analyzer.export_network_analysis('test_network_scan', 'json')
         
-        # Dosya oluşturulmuş mu kontrol et
         expected_path = 'reports/test_network_scan.json'
         self.assertTrue(os.path.exists(expected_path))
         
-        # İçerik kontrolü
         with open(expected_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             self.assertIn('discovered_devices', data)
@@ -534,8 +474,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
             self.assertEqual(len(data['discovered_devices']), 2)
     
     def test_export_network_analysis_html(self):
-        """HTML ağ analizi export testi"""
-        # Test verileri
+      
         test_devices = [
             NetworkDevice(ip_address="192.168.1.1", hostname="test-host", 
                          mac_address="00:11:22:33:44:55", vendor="Intel",
@@ -554,11 +493,9 @@ class TestNetworkAnalyzer(unittest.TestCase):
                 
                 self.analyzer.export_network_analysis('test_network_scan', 'html')
         
-        # HTML dosyası oluşturulmuş mu kontrol et
         expected_path = 'reports/test_network_scan.html'
         self.assertTrue(os.path.exists(expected_path))
         
-        # İçerik kontrolü
         with open(expected_path, 'r', encoding='utf-8') as f:
             content = f.read()
             self.assertIn('Ağ Analizi Raporu', content)
@@ -567,7 +504,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
             self.assertIn('Linux', content)
     
     def test_generate_html_report(self):
-        """HTML rapor oluşturma testi"""
+      
         test_data = {
             'scan_time': '2024-01-01 12:00:00',
             'discovered_devices': [
@@ -597,7 +534,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
         self.assertIn('22, 80, 443', html_content)
     
     def test_thread_safety(self):
-        """Thread güvenliği testi"""
+     
         results = []
         
         def scan_worker():
@@ -606,47 +543,41 @@ class TestNetworkAnalyzer(unittest.TestCase):
                 result = self.analyzer._ping_host("192.168.1.1")
                 results.append(result)
         
-        # Birden fazla thread ile ping
+       
         threads = []
         for _ in range(5):
             t = threading.Thread(target=scan_worker)
             threads.append(t)
             t.start()
         
-        # Thread'lerin bitmesini bekle
         for t in threads:
             t.join()
         
-        # Sonuçları kontrol et
         self.assertEqual(len(results), 5)
         for result in results:
             self.assertIsInstance(result, NetworkDevice)
             self.assertTrue(result.is_alive)
     
     def test_error_handling(self):
-        """Hata yönetimi testi"""
-        # Geçersiz network range
+      
         with self.assertLogs() as log:
             devices = self.analyzer.discover_network("invalid.network.range")
             self.assertEqual(len(devices), 0)
         
-        # Geçersiz IP ping
         device = self.analyzer._ping_host("invalid.ip.address")
         self.assertIsNone(device)
         
-        # Timeout handling
         with patch('subprocess.run', side_effect=TimeoutError()):
             device = self.analyzer._ping_host("192.168.1.1")
             self.assertIsNone(device)
     
     def test_callback_functionality(self):
-        """Callback fonksiyonalitesi testi"""
+       
         callback_calls = []
         
         def test_callback(progress, ip, device):
             callback_calls.append((progress, ip, device))
         
-        # Mock ping ve network
         with patch('ipaddress.IPv4Network') as mock_network:
             mock_network.return_value.hosts.return_value = [
                 ipaddress.IPv4Address('192.168.1.1')
@@ -658,7 +589,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
                 with patch.object(self.analyzer, '_analyze_discovered_devices'):
                     self.analyzer.discover_network("192.168.1.0/24", test_callback)
         
-        # Callback çağrılmış olmalı
+       
         self.assertGreater(len(callback_calls), 0)
         progress, ip, device = callback_calls[0]
         self.assertIsInstance(progress, float)
@@ -666,7 +597,7 @@ class TestNetworkAnalyzer(unittest.TestCase):
         self.assertIsInstance(device, NetworkDevice)
     
     def test_parse_windows_interfaces(self):
-        """Windows interface parsing testi"""
+   
         windows_output = """
 Windows IP Configuration
 
@@ -689,21 +620,19 @@ Wireless LAN adapter Wi-Fi:
         
         self.assertEqual(len(interfaces), 2)
         
-        # İlk interface kontrolü
         eth_interface = interfaces[0]
         self.assertIn('Local Area Connection', eth_interface['name'])
         self.assertEqual(eth_interface['ip'], '192.168.1.100')
         self.assertEqual(eth_interface['netmask'], '255.255.255.0')
         self.assertEqual(eth_interface['gateway'], '192.168.1.1')
         
-        # İkinci interface kontrolü
         wifi_interface = interfaces[1]
         self.assertIn('Wi-Fi', wifi_interface['name'])
         self.assertEqual(wifi_interface['ip'], '10.0.0.5')
         self.assertEqual(wifi_interface['gateway'], '10.0.0.1')
     
     def test_parse_unix_interfaces(self):
-        """Unix interface parsing testi"""
+       
         unix_output = """
 eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         inet 192.168.1.100  netmask 255.255.255.0  broadcast 192.168.1.255
@@ -723,76 +652,71 @@ wlan0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         
         self.assertGreaterEqual(len(interfaces), 3)
         
-        # eth0 kontrolü
         eth_interface = next((iface for iface in interfaces if iface['name'] == 'eth0'), None)
         self.assertIsNotNone(eth_interface)
         self.assertEqual(eth_interface['ip'], '192.168.1.100')
         self.assertEqual(eth_interface['netmask'], '255.255.255.0')
         
-        # lo kontrolü
         lo_interface = next((iface for iface in interfaces if iface['name'] == 'lo'), None)
         self.assertIsNotNone(lo_interface)
         self.assertEqual(lo_interface['ip'], '127.0.0.1')
         
-        # wlan0 kontrolü
         wlan_interface = next((iface for iface in interfaces if iface['name'] == 'wlan0'), None)
         self.assertIsNotNone(wlan_interface)
         self.assertEqual(wlan_interface['ip'], '10.0.0.15')
     
     def test_advanced_os_detection(self):
-        """Gelişmiş OS tespiti testi"""
-        # TTL tabanlı tespit
+     
+        
         with patch.object(self.analyzer, '_get_ttl', return_value=64):
             with patch.object(self.analyzer, '_detect_os_from_banners', return_value=""):
                 os_type = self.analyzer._detect_os("192.168.1.1")
                 self.assertEqual(os_type, "Linux/Unix")
         
-        # Banner tabanlı tespit öncelikli
         with patch.object(self.analyzer, '_get_ttl', return_value=None):
             with patch.object(self.analyzer, '_detect_os_from_banners', return_value="Ubuntu Linux"):
                 os_type = self.analyzer._detect_os("192.168.1.1")
                 self.assertEqual(os_type, "Ubuntu Linux")
         
-        # TTL router geçişli
         with patch.object(self.analyzer, '_get_ttl', return_value=63):  # 64-1 (router hop)
             with patch.object(self.analyzer, '_detect_os_from_banners', return_value=""):
                 os_type = self.analyzer._detect_os("192.168.1.1")
                 self.assertEqual(os_type, "Linux/Unix (through router)")
     
     def test_comprehensive_device_classification(self):
-        """Kapsamlı cihaz sınıflandırma testi"""
+       
         test_cases = [
-            # Web Server Linux
+       
             {
                 'ports': [22, 80, 443],
                 'expected': 'Web Server (Linux)'
             },
-            # Web Server Windows
+          
             {
                 'ports': [80, 443, 3389],
                 'expected': 'Web Server (Windows)'
             },
-            # Mail Server
+    
             {
                 'ports': [25, 110, 143, 993],
                 'expected': 'Mail Server'
             },
-            # File Server
+     
             {
                 'ports': [139, 445],
                 'expected': 'File Server'
             },
-            # Linux Desktop
+        
             {
                 'ports': [22],
                 'expected': 'Linux Desktop'
             },
-            # IoT Device
+      
             {
                 'ports': [80],
                 'expected': 'IoT Device'
             },
-            # Network Device
+         
             {
                 'ports': [23],
                 'expected': 'Network Device'
@@ -809,8 +733,7 @@ wlan0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
                 self.assertEqual(device_type, test_case['expected'])
     
     def test_mac_address_edge_cases(self):
-        """MAC adresi kenar durumları testi"""
-        # Farklı MAC formatları
+      
         test_cases = [
             ("00-11-22-33-44-55", "00:11:22:33:44:55"),
             ("aa:bb:cc:dd:ee:ff", "AA:BB:CC:DD:EE:FF"),
@@ -826,7 +749,7 @@ wlan0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
                     self.assertIsInstance(vendor, str)
     
     def test_network_range_validation(self):
-        """Ağ aralığı doğrulama testi"""
+     
         valid_ranges = [
             "192.168.1.0/24",
             "10.0.0.0/8",
@@ -843,24 +766,21 @@ wlan0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
                     self.fail(f"Valid network range {network_range} failed: {e}")
     
     def test_performance_monitoring(self):
-        """Performans izleme testi"""
-        # Zaman ölçümü
+  
         start_time = time.time()
         
-        # Mock hızlı işlem
         with patch.object(self.analyzer, '_ping_host', 
                          return_value=NetworkDevice(ip_address="192.168.1.1", is_alive=True)):
             device = self.analyzer._ping_host("192.168.1.1")
         
         duration = time.time() - start_time
         
-        # Performans kontrolü (çok hızlı olmalı çünkü mock)
         self.assertLess(duration, 1.0)
         self.assertIsNotNone(device)
         self.assertGreater(device.response_time, 0)
     
     def test_concurrent_analysis(self):
-        """Eşzamanlı analiz testi"""
+  
         devices = [
             NetworkDevice(ip_address=f"192.168.1.{i}", is_alive=True)
             for i in range(1, 6)  # 5 cihaz
@@ -875,26 +795,24 @@ wlan0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
             
             self.analyzer._analyze_discovered_devices(devices)
             
-            # Her cihaz için analiz çağrılmış olmalı
             self.assertEqual(mock_analysis.call_count, 5)
     
     def test_export_error_handling(self):
-        """Export hata yönetimi testi"""
-        # Geçersiz format
+  
         self.analyzer.discovered_devices = [
             NetworkDevice(ip_address="192.168.1.1")
         ]
         
-        # Desteklenmeyen format - hata vermemeli, sadece ignore etmeli
+
         try:
             self.analyzer.export_network_analysis('test_invalid', 'xml')
-            # Desteklenmeyen format için dosya oluşturulmamalı
+         
             self.assertFalse(os.path.exists('reports/test_invalid.xml'))
         except Exception as e:
             self.fail(f"Export should handle invalid format gracefully: {e}")
     
     def _create_test_server(self):
-        """Test için basit TCP server oluşturur"""
+
         class TestServer:
             def __init__(self):
                 self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -933,15 +851,14 @@ wlan0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 
 
 class TestIntegration(unittest.TestCase):
-    """Integration testler"""
+
     
     def setUp(self):
-        """Integration test setup"""
+       
         self.analyzer = NetworkAnalyzer(timeout=0.5, max_threads=5)
     
     def test_full_network_discovery_simulation(self):
-        """Tam ağ keşfi simülasyonu"""
-        # Mock tüm bağımlılıklar
+   
         mock_devices = [
             NetworkDevice(
                 ip_address="192.168.1.1",
@@ -977,19 +894,16 @@ class TestIntegration(unittest.TestCase):
                     'gateways': ['192.168.1.1']
                 }
                 
-                # Tam workflow test
                 devices = self.analyzer.discover_network("192.168.1.0/24")
                 topology = self.analyzer.analyze_network_topology()
                 
-                # Sonuçları kontrol et
                 self.assertEqual(len(devices), 2)
                 self.assertEqual(topology['total_devices'], 2)
                 self.assertIn('Gateway', topology['device_types'])
                 self.assertIn('Web Server', topology['device_types'])
     
     def test_error_recovery(self):
-        """Hata kurtarma testi"""
-        # Network discovery sırasında bazı IP'ler için hata
+
         def mock_ping_with_errors(ip):
             if ip == "192.168.1.1":
                 return NetworkDevice(ip_address=ip, is_alive=True)
@@ -1010,31 +924,29 @@ class TestIntegration(unittest.TestCase):
                 with patch.object(self.analyzer, '_analyze_discovered_devices'):
                     devices = self.analyzer.discover_network("192.168.1.0/24")
         
-        # Hata olsa bile en az 1 cihaz bulunmuş olmalı
         self.assertEqual(len(devices), 1)
         self.assertEqual(devices[0].ip_address, "192.168.1.1")
 
 
 if __name__ == '__main__':
-    # Test dizinlerini oluştur
+
     os.makedirs('reports', exist_ok=True)
     os.makedirs('data', exist_ok=True)
     
-    # Test suite oluştur
+
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
     
-    # Test sınıflarını ekle
+
     suite.addTests(loader.loadTestsFromTestCase(TestNetworkDevice))
     suite.addTests(loader.loadTestsFromTestCase(TestNetworkSegment))
     suite.addTests(loader.loadTestsFromTestCase(TestNetworkAnalyzer))
     suite.addTests(loader.loadTestsFromTestCase(TestIntegration))
     
-    # Test çalıştır
+ 
     runner = unittest.TextTestRunner(verbosity=2, buffer=True)
     result = runner.run(suite)
-    
-    # Sonuç raporu
+
     print(f"\n{'='*60}")
     print(f"Network Analyzer Test Özeti:")
     print(f"{'='*60}")
@@ -1055,7 +967,7 @@ if __name__ == '__main__':
     
     print(f"{'='*60}")
     
-    # Başarı durumu
+  
     if result.wasSuccessful():
         print("✅ Tüm testler başarılı!")
         print("🔍 Network Analyzer modülü test edildi:")

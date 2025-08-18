@@ -14,7 +14,6 @@ from dataclasses import dataclass, asdict
 
 @dataclass
 class NetworkDevice:
-    """Ağ cihazı bilgileri"""
     ip_address: str
     hostname: str = ""
     mac_address: str = ""
@@ -33,7 +32,6 @@ class NetworkDevice:
 
 @dataclass
 class NetworkSegment:
-    """Ağ segmenti bilgileri"""
     network: str
     netmask: str
     gateway: str = ""
@@ -47,32 +45,19 @@ class NetworkSegment:
             self.devices = []
 
 class NetworkAnalyzer:
-    """
-    Kapsamlı Ağ Analiz Aracı
-    Ağ keşfi, cihaz tespiti, OS fingerprinting ve ağ topolojisi analizi
-    """
     
     def __init__(self, timeout: float = 1.0, max_threads: int = 50):
-        """
-        Network Analyzer'ı başlatır
-        
-        Args:
-            timeout: Ping ve bağlantı zaman aşımı
-            max_threads: Maksimum thread sayısı
-        """
+       
         self.timeout = timeout
         self.max_threads = max_threads
         self.discovered_devices = []
         self.network_segments = []
         
-        # OS detection patterns
         self.os_patterns = self.load_os_patterns()
         
-        # MAC vendor veritabanı
         self.mac_vendors = self.load_mac_vendors()
     
     def load_os_patterns(self) -> Dict:
-        """OS fingerprinting pattern'lerini yükler"""
         try:
             with open('data/os_patterns.json', 'r', encoding='utf-8') as f:
                 return json.load(f)
@@ -96,7 +81,6 @@ class NetworkAnalyzer:
             }
     
     def load_mac_vendors(self) -> Dict:
-        """MAC vendor veritabanını yükler"""
         try:
             with open('data/mac_vendors.json', 'r', encoding='utf-8') as f:
                 return json.load(f)
@@ -111,39 +95,26 @@ class NetworkAnalyzer:
             }
     
     def discover_network(self, network_range: str, callback=None) -> List[NetworkDevice]:
-        """
-        Ağ keşfi yapar
-        
-        Args:
-            network_range: CIDR formatında ağ aralığı (örn: 192.168.1.0/24)
-            callback: İlerleme callback fonksiyonu
-            
-        Returns:
-            List[NetworkDevice]: Keşfedilen cihazlar
-        """
+     
         devices = []
         
         try:
-            # IP aralığını parse et
             network = ipaddress.IPv4Network(network_range, strict=False)
             ip_list = list(network.hosts())
             
-            # Broadcast adresi de ekle
             if network.broadcast_address:
                 ip_list.append(network.broadcast_address)
             
             print(f"Taranacak IP sayısı: {len(ip_list)}")
             completed = 0
             
-            # Paralel ping taraması
             with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
-                # Ping işlemlerini başlat
+           
                 future_to_ip = {
                     executor.submit(self._ping_host, str(ip)): str(ip) 
                     for ip in ip_list
                 }
                 
-                # Sonuçları topla
                 for future in as_completed(future_to_ip):
                     ip = future_to_ip[future]
                     completed += 1
@@ -154,7 +125,6 @@ class NetworkAnalyzer:
                             devices.append(device_info)
                             print(f"✓ Cihaz bulundu: {ip} - {device_info.hostname}")
                         
-                        # İlerleme bildirimi
                         if callback:
                             progress = (completed / len(ip_list)) * 100
                             callback(progress, ip, device_info)
@@ -164,7 +134,6 @@ class NetworkAnalyzer:
             
             self.discovered_devices = devices
             
-            # Bulunan cihazlar için detaylı analiz
             print(f"\n{len(devices)} cihaz bulundu. Detaylı analiz başlatılıyor...")
             self._analyze_discovered_devices(devices)
             
@@ -174,9 +143,7 @@ class NetworkAnalyzer:
         return devices
     
     def _ping_host(self, ip: str) -> Optional[NetworkDevice]:
-        """Tek bir host'a ping atar"""
         try:
-            # Platform'a göre ping komutu
             if platform.system().lower() == "windows":
                 ping_cmd = ["ping", "-n", "1", "-w", "1000", ip]
             else:
@@ -198,7 +165,6 @@ class NetworkAnalyzer:
                     response_time=response_time
                 )
                 
-                # Hostname çözümlemesi
                 try:
                     device.hostname = socket.gethostbyaddr(ip)[0]
                 except:
@@ -224,7 +190,6 @@ class NetworkAnalyzer:
                 try:
                     updated_device = future.result()
                     if updated_device:
-                        # Mevcut device'ı güncelle
                         device.mac_address = updated_device.mac_address
                         device.os_fingerprint = updated_device.os_fingerprint
                         device.open_ports = updated_device.open_ports
@@ -235,24 +200,20 @@ class NetworkAnalyzer:
     
     def _detailed_device_analysis(self, device: NetworkDevice) -> NetworkDevice:
         """Tek bir cihaz için detaylı analiz"""
-        # MAC adresi öğrenme
         device.mac_address = self._get_mac_address(device.ip_address)
         if device.mac_address:
             device.vendor = self._get_vendor_from_mac(device.mac_address)
         
-        # OS fingerprinting
         device.os_fingerprint = self._detect_os(device.ip_address)
         
-        # Hızlı port taraması (yaygın portlar)
         device.open_ports, device.services = self._quick_port_scan(device.ip_address)
         
         return device
     
     def _get_mac_address(self, ip: str) -> str:
-        """IP adresinin MAC adresini öğrenir"""
         try:
             if platform.system().lower() == "windows":
-                # Windows ARP tablosu
+              
                 result = subprocess.run(
                     ["arp", "-a", ip], 
                     capture_output=True, 
@@ -262,12 +223,10 @@ class NetworkAnalyzer:
                     lines = result.stdout.split('\n')
                     for line in lines:
                         if ip in line:
-                            # MAC adresi pattern'i ara
                             mac_match = re.search(r'([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}', line)
                             if mac_match:
                                 return mac_match.group().upper()
             else:
-                # Linux/macOS ARP tablosu
                 result = subprocess.run(
                     ["arp", "-n", ip], 
                     capture_output=True, 
@@ -288,12 +247,10 @@ class NetworkAnalyzer:
         return ""
     
     def _get_vendor_from_mac(self, mac: str) -> str:
-        """MAC adresinden vendor bilgisini çıkarır"""
         if not mac:
             return ""
         
-        # İlk 3 oktet (OUI - Organizationally Unique Identifier)
-        oui = mac[:8]  # XX:XX:XX formatı
+        oui = mac[:8]  
         
         for oui_prefix, vendor in self.mac_vendors.items():
             if mac.startswith(oui_prefix.upper()):
@@ -302,12 +259,9 @@ class NetworkAnalyzer:
         return "Unknown"
     
     def _detect_os(self, ip: str) -> str:
-        """OS fingerprinting yapar"""
         try:
-            # TCP SYN packet gönder ve TTL değerini kontrol et
             ttl = self._get_ttl(ip)
             
-            # TTL değerine göre OS tahmini
             if ttl:
                 if ttl <= 64:
                     if ttl == 64:
@@ -322,7 +276,6 @@ class NetworkAnalyzer:
                 elif ttl <= 255:
                     return "Cisco/Network Device"
             
-            # Banner-based detection
             banner_os = self._detect_os_from_banners(ip)
             if banner_os:
                 return banner_os
@@ -333,7 +286,6 @@ class NetworkAnalyzer:
         return "Unknown"
     
     def _get_ttl(self, ip: str) -> Optional[int]:
-        """TTL değerini ping ile öğrenir"""
         try:
             if platform.system().lower() == "windows":
                 result = subprocess.run(
@@ -342,7 +294,6 @@ class NetworkAnalyzer:
                     text=True
                 )
                 if result.returncode == 0:
-                    # Windows ping output'undan TTL çıkar
                     ttl_match = re.search(r'TTL=(\d+)', result.stdout)
                     if ttl_match:
                         return int(ttl_match.group(1))
@@ -353,7 +304,6 @@ class NetworkAnalyzer:
                     text=True
                 )
                 if result.returncode == 0:
-                    # Linux/macOS ping output'undan TTL çıkar
                     ttl_match = re.search(r'ttl=(\d+)', result.stdout)
                     if ttl_match:
                         return int(ttl_match.group(1))
@@ -363,7 +313,6 @@ class NetworkAnalyzer:
         return None
     
     def _detect_os_from_banners(self, ip: str) -> str:
-        """Servis banner'larından OS tespiti"""
         common_ports = [22, 23, 25, 53, 80, 110, 143, 443, 993, 995]
         
         for port in common_ports:
@@ -371,7 +320,6 @@ class NetworkAnalyzer:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(2)
                 if sock.connect_ex((ip, port)) == 0:
-                    # Banner oku
                     try:
                         if port == 80 or port == 443:
                             sock.send(b"HEAD / HTTP/1.0\r\n\r\n")
@@ -379,7 +327,6 @@ class NetworkAnalyzer:
                         banner = sock.recv(1024).decode('utf-8', errors='ignore')
                         sock.close()
                         
-                        # Banner'dan OS çıkar
                         banner_lower = banner.lower()
                         if 'ubuntu' in banner_lower or 'debian' in banner_lower:
                             return "Linux (Ubuntu/Debian)"
@@ -402,11 +349,9 @@ class NetworkAnalyzer:
         return ""
     
     def _quick_port_scan(self, ip: str) -> Tuple[List[int], Dict[int, str]]:
-        """Hızlı port taraması yapar"""
         open_ports = []
         services = {}
         
-        # Yaygın portlar listesi
         common_ports = {
             21: "FTP", 22: "SSH", 23: "Telnet", 25: "SMTP",
             53: "DNS", 80: "HTTP", 110: "POP3", 135: "RPC",
@@ -435,7 +380,6 @@ class NetworkAnalyzer:
         return sorted(open_ports), services
     
     def _scan_single_port(self, ip: str, port: int) -> bool:
-        """Tek bir portu tarar"""
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1)
@@ -446,7 +390,6 @@ class NetworkAnalyzer:
             return False
     
     def analyze_network_topology(self) -> Dict:
-        """Ağ topolojisini analiz eder"""
         topology = {
             'segments': [],
             'gateways': [],
@@ -456,86 +399,70 @@ class NetworkAnalyzer:
             'vendor_distribution': {}
         }
         
-        # Cihaz türleri analizi
         for device in self.discovered_devices:
-            # Açık portlara göre cihaz türü tahmin et
             device_type = self._classify_device_type(device)
             if device_type in topology['device_types']:
                 topology['device_types'][device_type] += 1
             else:
                 topology['device_types'][device_type] = 1
             
-            # OS dağılımı
             os = device.os_fingerprint or "Unknown"
             if os in topology['os_distribution']:
                 topology['os_distribution'][os] += 1
             else:
                 topology['os_distribution'][os] = 1
             
-            # Vendor dağılımı
             vendor = device.vendor or "Unknown"
             if vendor in topology['vendor_distribution']:
                 topology['vendor_distribution'][vendor] += 1
             else:
                 topology['vendor_distribution'][vendor] = 1
         
-        # Gateway tespiti
         topology['gateways'] = self._detect_gateways()
         
         return topology
     
     def _classify_device_type(self, device: NetworkDevice) -> str:
-        """Cihaz türünü sınıflandırır"""
         open_ports = set(device.open_ports)
         
-        # Web sunucusu
         if 80 in open_ports or 443 in open_ports or 8080 in open_ports:
-            if 22 in open_ports:  # SSH var
+            if 22 in open_ports:  
                 return "Web Server (Linux)"
-            elif 3389 in open_ports:  # RDP var
+            elif 3389 in open_ports: 
                 return "Web Server (Windows)"
             else:
                 return "Web Server"
         
-        # Veritabanı sunucusu
         if 3306 in open_ports or 5432 in open_ports or 1433 in open_ports:
             return "Database Server"
         
-        # Mail sunucusu
         if 25 in open_ports or 110 in open_ports or 143 in open_ports:
             return "Mail Server"
         
-        # DNS sunucusu
         if 53 in open_ports:
             return "DNS Server"
         
-        # Dosya paylaşım
         if 445 in open_ports or 139 in open_ports or 21 in open_ports:
             return "File Server"
         
-        # Network cihazı
         if 23 in open_ports and len(open_ports) <= 3:
             return "Network Device"
         
-        # Desktop/Workstation
-        if 3389 in open_ports:  # RDP
+        if 3389 in open_ports: 
             return "Windows Desktop"
         elif 22 in open_ports and len(open_ports) <= 2:
             return "Linux Desktop"
         
-        # IoT/Embedded
         if len(open_ports) == 1 and (80 in open_ports or 443 in open_ports):
             return "IoT Device"
         
         return "Unknown Device"
     
     def _detect_gateways(self) -> List[str]:
-        """Gateway cihazlarını tespit eder"""
         gateways = []
         
         try:
             if platform.system().lower() == "windows":
-                # Windows route tablosu
                 result = subprocess.run(
                     ["route", "print", "0.0.0.0"], 
                     capture_output=True, 
@@ -551,7 +478,6 @@ class NetworkAnalyzer:
                                 if gateway != '0.0.0.0' and gateway not in gateways:
                                     gateways.append(gateway)
             else:
-                # Linux/macOS route tablosu
                 result = subprocess.run(
                     ["route", "-n"], 
                     capture_output=True, 
@@ -572,7 +498,6 @@ class NetworkAnalyzer:
         return gateways
     
     def get_network_interfaces(self) -> List[Dict]:
-        """Yerel ağ arayüzlerini listeler"""
         interfaces = []
         
         try:
@@ -582,7 +507,6 @@ class NetworkAnalyzer:
                     capture_output=True, 
                     text=True
                 )
-                # Windows ipconfig parsing
                 interfaces = self._parse_windows_interfaces(result.stdout)
             else:
                 result = subprocess.run(
@@ -590,7 +514,6 @@ class NetworkAnalyzer:
                     capture_output=True, 
                     text=True
                 )
-                # Linux/macOS ifconfig parsing
                 interfaces = self._parse_unix_interfaces(result.stdout)
         except Exception as e:
             print(f"Interface listesi alınamadı: {str(e)}")
@@ -598,7 +521,6 @@ class NetworkAnalyzer:
         return interfaces
     
     def _parse_windows_interfaces(self, output: str) -> List[Dict]:
-        """Windows ipconfig çıktısını parse eder"""
         interfaces = []
         current_interface = {}
         
@@ -632,7 +554,6 @@ class NetworkAnalyzer:
         return interfaces
     
     def _parse_unix_interfaces(self, output: str) -> List[Dict]:
-        """Unix/Linux ifconfig çıktısını parse eder"""
         interfaces = []
         current_interface = {}
         
@@ -659,7 +580,6 @@ class NetworkAnalyzer:
         return interfaces
     
     def export_network_analysis(self, filename: str, format: str = 'json'):
-        """Ağ analizi sonuçlarını dosyaya aktarır"""
         os.makedirs('reports', exist_ok=True)
         filepath = os.path.join('reports', filename)
         
@@ -680,7 +600,6 @@ class NetworkAnalyzer:
                 f.write(html_content)
     
     def _generate_network_html_report(self, data: Dict) -> str:
-        """HTML ağ analizi raporu oluşturur"""
         html = f"""
         <!DOCTYPE html>
         <html>
@@ -732,7 +651,6 @@ class NetworkAnalyzer:
                 </tr>
             """
         
-        # Topoloji bilgileri
         topology = data['topology']
         html += f"""
             </table>
@@ -764,20 +682,17 @@ class NetworkAnalyzer:
         return html
 
 
-# Test fonksiyonu
 if __name__ == "__main__":
     def progress_callback(progress, ip, device):
         print(f"İlerleme: %{progress:.1f} - {ip}")
     
     analyzer = NetworkAnalyzer(timeout=1.0, max_threads=50)
     
-    # Yerel ağ arayüzlerini listele
     print("Ağ arayüzleri:")
     interfaces = analyzer.get_network_interfaces()
     for interface in interfaces:
         print(f"- {interface}")
     
-    # Ağ keşfi başlat
     print("\nAğ keşfi başlatılıyor...")
     devices = analyzer.discover_network("192.168.1.0/24", callback=progress_callback)
     
@@ -788,13 +703,11 @@ if __name__ == "__main__":
             if device.open_ports:
                 print(f"  Açık portlar: {device.open_ports}")
         
-        # Topoloji analizi
         topology = analyzer.analyze_network_topology()
         print(f"\nTopoloji Analizi:")
         print(f"Cihaz türleri: {topology['device_types']}")
         print(f"OS dağılımı: {topology['os_distribution']}")
         
-        # Raporu kaydet
         analyzer.export_network_analysis('network_scan', 'json')
         print("\nRapor 'reports/network_scan.json' dosyasına kaydedildi.")
     else:

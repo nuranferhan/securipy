@@ -1,11 +1,3 @@
-"""Bu paket SecuriPy güvenlik aracı setinin ana modüllerini içerir:
-- Port Scanner: TCP/UDP port taraması
-- Vulnerability Scanner: Güvenlik açığı tespiti
-- Network Analyzer: Ağ keşfi ve analizi
-- Utils: Yardımcı fonksiyonlar
-- CLI: Komut satırı arayüzü
-"""
-
 __version__ = "1.0.0"
 __author__ = "SecuriPy Development Team"
 __email__ = "developer@securipy.com"
@@ -57,11 +49,9 @@ __all__ = [
 ]
 
 def get_version():
-    """Modül versiyonunu döndürür"""
     return __version__
 
 def get_info():
-    """Modül bilgilerini döndürür"""
     return {
         'name': 'SecuriPy',
         'version': __version__,
@@ -73,7 +63,6 @@ def get_info():
     }
 
 def check_dependencies():
-    """Bağımlılık kontrolü yapar"""
     required_modules = [
         'requests', 'matplotlib', 'json', 'socket', 
         'threading', 'subprocess', 'ipaddress'
@@ -93,7 +82,6 @@ def check_dependencies():
     }
 
 def create_default_scanner():
-    """Varsayılan ayarlarla scanner oluşturur"""
     if not _import_success:
         raise ImportError("Modüller düzgün yüklenmedi")
     
@@ -103,28 +91,21 @@ def create_default_scanner():
         'network_analyzer': NetworkAnalyzer()
     }
 
-# Modül yüklendiğinde çalıştırılacak kod
 def _initialize_module():
-    """Modül başlatma işlemleri"""
     import os
     
-    # Gerekli dizinleri oluştur
     directories = ['reports', 'logs', 'data', 'config']
     for directory in directories:
         os.makedirs(directory, exist_ok=True)
     
-    # Bağımlılık kontrolü
     deps = check_dependencies()
     if not deps['all_available']:
         print(f"⚠️ Eksik bağımlılıklar: {', '.join(deps['missing'])}")
         print("📦 Kurulum için: pip install -r requirements.txt")
 
-# Modül başlatma
 _initialize_module()
 
-# Versiyon kontrolü
 def check_python_version():
-    """Python versiyon kontrolü"""
     import sys
     
     required_version = (3, 8)
@@ -138,15 +119,12 @@ def check_python_version():
     
     return True
 
-# Python versiyon kontrolü yap
 try:
     check_python_version()
 except RuntimeError as e:
     print(f"❌ {e}")
 
-# Debug bilgileri (opsiyonel)
 def print_debug_info():
-    """Debug bilgilerini yazdırır"""
     info = get_info()
     deps = check_dependencies()
     
@@ -159,6 +137,5 @@ def print_debug_info():
     if not deps['all_available']:
         print(f"❌ Eksik: {', '.join(deps['missing'])}")
 
-# Modül hakkında
 if __name__ == "__main__":
     print_debug_info()
