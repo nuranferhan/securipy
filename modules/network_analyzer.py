@@ -445,7 +445,7 @@ class NetworkAnalyzer:
         if 445 in open_ports or 139 in open_ports or 21 in open_ports:
             return "File Server"
         
-        if 23 in open_ports and len(open_ports) <= 3:
+        if 23 in open_ports and len(open_ports) <= 3: 
             return "Network Device"
         
         if 3389 in open_ports: 
