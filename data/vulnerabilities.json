@@ -1,0 +1,29 @@
+{
+  "web_vulnerabilities": {
+    "sql_injection": {
+      "patterns": ["error in your SQL syntax", "mysql_fetch", "ORA-", "Microsoft OLE DB"],
+      "severity": "HIGH",
+      "description": "SQL Injection vulnerability detected"
+    },
+    "xss": {
+      "patterns": ["<script>", "javascript:", "onerror=", "onload="],
+      "severity": "MEDIUM",
+      "description": "Cross-Site Scripting (XSS) vulnerability"
+    }
+  },
+  "service_vulnerabilities": {
+    "apache": {
+      "2.4.29": ["CVE-2018-1312", "CVE-2018-1283"],
+      "2.4.33": ["CVE-2018-11763"],
+      "2.2.15": ["CVE-2017-7679", "CVE-2017-3167"]
+    },
+    "nginx": {
+      "1.10.3": ["CVE-2017-7529"],
+      "1.12.2": ["CVE-2018-16843", "CVE-2018-16844"]
+    },
+    "openssh": {
+      "7.4": ["CVE-2018-15919", "CVE-2018-15473"],
+      "6.6.1": ["CVE-2016-0777", "CVE-2016-0778"]
+    }
+  }
+}

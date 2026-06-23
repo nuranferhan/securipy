@@ -1,0 +1,98 @@
+# SecuriPy - Kapsamlı Güvenlik Aracı Seti
+# Python Bağımlılıkları
+
+# GUI Framework
+tkinter  # Python ile birlikte gelir, ayrıca kurulum gerektirmez
+
+# HTTP İstekleri
+requests>=2.28.0
+
+# Grafik ve Görselleştirme
+matplotlib>=3.5.0
+
+# Ağ İşlemleri
+scapy>=2.4.5
+
+# Veri Manipülasyonu ve Analiz
+pandas>=1.4.0
+numpy>=1.21.0
+
+# JSON ve Veri Formatları
+jsonschema>=4.0.0
+
+# Kriptografi
+cryptography>=3.4.8
+
+# HTTP Server (Web Sunucu testleri için)
+flask>=2.0.0
+
+# DNS Çözümleme
+dnspython>=2.2.0
+
+# SSL/TLS Analizi
+pyOpenSSL>=22.0.0
+
+# Web Scraping (Web güvenlik testleri için)
+beautifulsoup4>=4.10.0
+
+# Thread Pool Utilities
+concurrent-futures>=3.1.1  # Python 3.2+ ile birlikte gelir
+
+# Logging ve Debugging
+colorama>=0.4.4
+
+# Tarih/Zaman İşlemleri
+python-dateutil>=2.8.0
+
+# Sistem İşlemleri
+psutil>=5.8.0
+
+# Network Discovery
+python-nmap>=0.7.1
+
+# Vulnerability Database
+nvdlib>=0.7.0
+
+# Report Generation (PDF için)
+reportlab>=3.6.0  # Opsiyonel - PDF raporları için
+
+# Email bildirimleri için (opsiyonel)
+smtplib  # Python ile birlikte gelir
+
+# Configuration Management
+configparser  # Python ile birlikte gelir
+
+# File Operations
+pathlib  # Python ile birlikte gelir
+
+# Regular Expressions
+re  # Python ile birlikte gelir
+
+# System Information
+platform  # Python ile birlikte gelir
+
+# Threading
+threading  # Python ile birlikte gelir
+
+# Subprocess Management
+subprocess  # Python ile birlikte gelir
+
+# Socket Programming
+socket  # Python ile birlikte gelir
+
+# IP Address Manipulation
+ipaddress  # Python ile birlikte gelir
+
+# Base64 Encoding/Decoding
+base64  # Python ile birlikte gelir
+
+# Hash Algorithms
+hashlib  # Python ile birlikte gelir
+
+# Development ve Test Dependencies (Opsiyonel)
+# pytest>=7.0.0
+# pytest-cov>=3.0.0
+# black>=22.0.0
+# flake8>=4.0.0
+
+# Minimum Python Version: 3.8+
